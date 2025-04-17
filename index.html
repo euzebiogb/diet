@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Composição Corporal e Dieta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .chart-container {
+            position: relative;
+            /* Adjusted height for potentially better mobile view */
+            height: 45vh;
+            min-height: 300px; /* Minimum height */
+            width: 100%;
+            max-width: 800px; /* Max width for larger screens */
+            margin: auto; /* Center the chart */
+        }
+        /* Custom styles for better form appearance */
+        label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+        input[type="number"], select {
+            @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2;
+        }
+        input[type="checkbox"] {
+            @apply h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2;
+        }
+        /* Style range inputs */
+        input[type="range"] {
+             @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600; /* Added accent color */
+        }
+
+        button {
+            @apply inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out;
+        }
+        .metric-card {
+            @apply bg-white p-4 rounded-lg shadow;
+        }
+        .metric-title {
+            @apply text-sm font-medium text-gray-500 truncate;
+        }
+        .metric-value {
+            @apply mt-1 text-2xl font-semibold text-gray-900;
+        }
+        .alert {
+            @apply p-4 rounded-md mt-4 text-sm; /* Slightly smaller text for alerts */
+        }
+        .alert-warning {
+            @apply bg-yellow-100 border border-yellow-400 text-yellow-800; /* Darker text */
+        }
+        .alert-success {
+            @apply bg-green-100 border border-green-400 text-green-800; /* Darker text */
+        }
+        .alert-error {
+            @apply bg-red-100 border border-red-400 text-red-800; /* Darker text */
+        }
+        .alert-info {
+             @apply bg-blue-100 border border-blue-400 text-blue-800; /* Darker text */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-6 md:p-10">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Simulador de Composição Corporal e Dieta</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-1 space-y-4 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Entrada de Dados</h2>
+                <div>
+                    <label for="age">Idade (anos):</label>
+                    <input type="number" id="age" value="30" min="10" max="120" required>
+                </div>
+                <div>
+                    <label for="weight">Peso atual (kg):</label>
+                    <input type="number" id="weight" value="75.0" min="30.0" max="200.0" step="0.1" required>
+                </div>
+                <div>
+                    <label for="height">Altura (cm):</label>
+                    <input type="number" id="height" value="175.0" min="100.0" max="250.0" step="0.1" required>
+                </div>
+                <div>
+                    <label for="body_fat">Percentual de Gordura (%):</label>
+                    <input type="number" id="body_fat" value="20.0" min="5.0" max="60.0" step="0.1" required>
+                </div>
+                <div>
+                    <label for="sex">Sexo:</label>
+                    <select id="sex">
+                        <option value="M">Masculino</option>
+                        <option value="F">Feminino</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="exercise_level">Nível de Exercício:</label>
+                    <select id="exercise_level">
+                        <option value="Sedentário">Sedentário</option>
+                        <option value="Leve">Leve</option>
+                        <option value="Moderado" selected>Moderado</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Muito Ativo">Muito Ativo</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="goal_days">Dias para atingir a meta:</label>
+                    <input type="number" id="goal_days" value="180" min="30" max="365" required>
+                </div>
+                 <div>
+                    <label for="sleep_quality">Qualidade do Sono (1-10):</label>
+                    <input type="number" id="sleep_quality" value="7" min="1" max="10" step="1" required>
+                    <input type="range" id="sleep_quality_range" value="7" min="1" max="10" step="1" oninput="document.getElementById('sleep_quality').value = this.value">
+                </div>
+                 <div>
+                    <label for="stress_level">Nível de Estresse (1-10):</label>
+                    <input type="number" id="stress_level" value="3" min="1" max="10" step="1" required>
+                    <input type="range" id="stress_level_range" value="3" min="1" max="10" step="1" oninput="document.getElementById('stress_level').value = this.value">
+                </div>
+                <div class="flex items-center mt-4">
+                    <input type="checkbox" id="hipertrofia">
+                    <label for="hipertrofia" class="ml-2 text-sm font-medium text-gray-700">Objetivo: Hipertrofia</label>
+                </div>
+                <button id="simulateBtn" class="w-full">Simular</button>
+            </div>
+
+            <div class="md:col-span-2 space-y-6">
+                <div id="initialInfo" class="space-y-2 text-gray-700">
+                   <p><strong>Tipo Corporal:</strong> <span id="bodyTypeResult">-</span></p>
+                   <p><strong>Faixa de Peso Ideal:</strong> <span id="idealWeightResult">-</span> kg</p>
+                   <p><strong>Faixa de Gordura Saudável:</strong> <span id="idealFatResult">-</span> %</p>
+                </div>
+                 <div id="errorMessage" class="hidden alert alert-error"></div>
+
+                <div id="resultsArea" class="hidden space-y-6">
+                    <div class="chart-container bg-white p-4 rounded-lg shadow border border-gray-200">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Recomendações Diárias</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="metric-card">
+                                <div class="metric-title">Calorias</div>
+                                <div id="caloriesResult" class="metric-value">- kcal</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-title">Carboidratos</div>
+                                <div id="carbsResult" class="metric-value">- g</div>
+                            </div>
+                             <div class="metric-card">
+                                <div class="metric-title">Proteínas</div>
+                                <div id="proteinsResult" class="metric-value">- g</div>
+                            </div>
+                             <div class="metric-card">
+                                <div class="metric-title">Gorduras</div>
+                                <div id="fatsResult" class="metric-value">- g</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                             <a id="chatGptLink" href="#" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium">Gerar Cardápio no ChatGPT</a>
+                        </div>
+                    </div>
+
+                     <div id="alertArea"></div>
+
+                     <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Análise de Perfil</h3>
+                        <div id="analysisArea" class="alert alert-info">
+                            -
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================================================
+        // Funções de Cálculo e Modelagem (JavaScript)
+        // =============================================================================
+
+        /**
+         * Classifica o tipo corporal com base no IMC e percentual de gordura corporal.
+         * @param {number} weight Peso em kg.
+         * @param {number} height Altura em cm.
+         * @param {number} bodyFat Percentual de gordura corporal.
+         * @param {string} sex 'M' para masculino, 'F' para feminino.
+         * @returns {string} Classificação do tipo corporal ("Ectomorfo", "Mesomorfo", "Endomorfo", ou "Misto").
+         */
+        function classifyBodyType(weight, height, bodyFat, sex) {
+            const bmi = weight / ((height / 100) ** 2);
+            // --- NOTE: Lógica de classificação simplificada para aplicabilidade mais ampla ---
+            if (bodyFat < (sex === 'M' ? 12 : 20) && bmi < 20) {
+                return "Ectomorfo";
+            } else if ((sex === 'M' ? (bodyFat >= 12 && bodyFat <= 18) : (bodyFat >= 20 && bodyFat <= 28)) && (bmi >= 20 && bmi < 25)) {
+                return "Mesomorfo";
+            } else if (bodyFat > (sex === 'M' ? 18 : 28) && bmi >= 25) {
+                return "Endomorfo";
+            } else {
+                return "Misto";
+            }
+        }
+
+        /**
+         * Calcula a faixa de peso ideal usando uma combinação dos métodos de Hamwi e IMC.
+         * @param {number} age Idade em anos.
+         * @param {number} height Altura em cm.
+         * @param {string} sex 'M' para masculino, 'F' para feminino.
+         * @returns {Array<number>} Uma tupla contendo o peso ideal mínimo e máximo em kg.
+         */
+        function calculateIdealRange(age, height, sex) {
+            const heightInch = height / 2.54;
+            let hamwiLb;
+            if (sex.toUpperCase() === "M") {
+                hamwiLb = 106 + 6 * Math.max(0, heightInch - 60);
+            } else {
+                hamwiLb = 100 + 5 * Math.max(0, heightInch - 60);
+            }
+            const hamwiKg = hamwiLb * 0.453592;
+            const imcMinWeight = 18.5 * (height / 100) ** 2;
+            const imcMaxWeight = 24.9 * (height / 100) ** 2;
+            const weightMin = Math.min(hamwiKg, imcMinWeight) - 1.5;
+            const weightMax = Math.max(hamwiKg, imcMaxWeight) + 1.5;
+            const absoluteMin = 18.0 * (height / 100) ** 2;
+            const absoluteMax = 25.5 * (height / 100) ** 2;
+            return [Math.max(weightMin, absoluteMin).toFixed(1), Math.min(weightMax, absoluteMax).toFixed(1)];
+        }
+
+
+        /**
+         * Calcula a faixa de percentual de gordura corporal saudável com base na idade e sexo.
+         * @param {number} age Idade em anos.
+         * @param {string} sex 'M' para masculino, 'F' para feminino.
+         * @returns {Array<number>} Uma tupla contendo o percentual mínimo e máximo de gordura corporal saudável.
+         */
+        function calculateBodyFatRange(age, sex) {
+             if (sex.toUpperCase() === "M") {
+                if (age < 30) return [8.0, 15.0];
+                if (age < 50) return [12.0, 18.0];
+                return [15.0, 22.0];
+            } else { // Feminino
+                if (age < 30) return [18.0, 23.0];
+                if (age < 50) return [20.0, 25.0];
+                return [23.0, 28.0];
+            }
+        }
+
+        /**
+         * Calcula a Taxa Metabólica Basal (TMB) usando a equação de Mifflin-St Jeor.
+         * @param {number} age Idade em anos.
+         * @param {number} weight Peso em kg.
+         * @param {number} height Altura em cm.
+         * @param {string} sex 'M' para masculino, 'F' para feminino.
+         * @returns {number} Taxa Metabólica Basal (TMB) em kcal.
+         */
+        function calculateBMR(age, weight, height, sex) {
+             if (sex.toUpperCase() === "M") {
+                return 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                return 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+        }
+
+        /**
+         * Calcula a ingestão diária de calorias necessária para atingir a meta de peso.
+         * @param {number} weightInitial Peso inicial em kg.
+         * @param {number} weightFinal Peso final (meta) em kg.
+         * @param {number} days Número de dias para atingir a meta.
+         * @param {number} bmrInitial Taxa Metabólica Basal (TMB) inicial em kcal.
+         * @param {number} activityFactor Fator de atividade.
+         * @returns {number} Ingestão diária de calorias em kcal.
+         */
+        function calculateDailyIntake(weightInitial, weightFinal, days, bmrInitial, activityFactor) {
+            const kcalPerKg = 7700;
+            const totalDeficitOrSurplus = (weightInitial - weightFinal) * kcalPerKg;
+            const dailyDeficitOrSurplus = totalDeficitOrSurplus / days;
+            const tdeeInitial = bmrInitial * activityFactor;
+            const dailyIntake = tdeeInitial - dailyDeficitOrSurplus;
+            return dailyIntake;
+        }
+
+        /**
+         * Simula a evolução do peso, massa magra e massa gorda ao longo de um período.
+         * @param {number} weightInitial Peso inicial em kg.
+         * @param {number} weightFinal Peso meta em kg.
+         * @param {number} days Número de dias para a simulação.
+         * @param {number} age Idade em anos.
+         * @param {number} height Altura em cm.
+         * @param {string} sex 'M' para masculino, 'F' para feminino.
+         * @param {number} bodyFatInitial Percentual inicial de gordura corporal.
+         * @param {string} exerciseLevel Nível de exercício.
+         * @param {boolean} hipertrofia Se a simulação é para hipertrofia.
+         * @param {number} sleepQuality Qualidade do sono (1-10).
+         * @param {number} stressLevel Nível de estresse (1-10).
+         * @returns {object|null} Objeto com arrays de dias, pesos, massa magra, massa gorda e ingestão diária, ou null se a meta for impossível.
+         */
+        function simulateEvolution(weightInitial, weightFinal, days, age, height, sex, bodyFatInitial, exerciseLevel, hipertrofia, sleepQuality, stressLevel) {
+            const exerciseActivityMap = {
+                "Sedentário": 1.2,
+                "Leve": 1.375,
+                "Moderado": 1.55,
+                "Ativo": 1.725,
+                "Muito Ativo": 1.9,
+            };
+            let activityFactor = exerciseActivityMap[exerciseLevel] || 1.55;
+            activityFactor += (sleepQuality - 7) * 0.05;
+            activityFactor -= (stressLevel - 3) * 0.03;
+            activityFactor = Math.max(1.2, Math.min(activityFactor, 2.1));
+
+            const bmrInitial = calculateBMR(age, weightInitial, height, sex);
+            const dailyCalorieIntake = calculateDailyIntake(weightInitial, weightFinal, days, bmrInitial, activityFactor);
+            const minCalories = sex === 'M' ? 1500 : 1200;
+            if (dailyCalorieIntake < minCalories) {
+                console.error("Meta pode ser irrealista ou insalubre. Ingestão calórica calculada:", dailyCalorieIntake);
+                 return { dailyCalorieIntake: dailyCalorieIntake, error: `A ingestão calórica diária calculada (${dailyCalorieIntake.toFixed(0)} kcal) é muito baixa para atingir a meta neste prazo de forma saudável. Considere aumentar o prazo ou ajustar a meta.` };
+            }
+
+            let leanMass = weightInitial * (1 - bodyFatInitial / 100);
+            let fatMass = weightInitial * (bodyFatInitial / 100);
+            let currentWeight = weightInitial;
+
+            const weightHistory = [currentWeight];
+            const leanMassHistory = [leanMass];
+            const fatMassHistory = [fatMass];
+            const daysArray = [0];
+
+            for (let day = 1; day <= days; day++) {
+                daysArray.push(day);
+                const currentBMR = calculateBMR(age, currentWeight, height, sex);
+                const currentTDEE = currentBMR * activityFactor;
+                const actualDeficitOrSurplus = currentTDEE - dailyCalorieIntake;
+                const weightChange = actualDeficitOrSurplus / 7700;
+
+                let fatRatio, muscleRatio;
+
+                if (actualDeficitOrSurplus > 0) { // Déficit
+                    switch (exerciseLevel) {
+                        case "Sedentário": fatRatio = 0.70; muscleRatio = 0.30; break;
+                        case "Leve":       fatRatio = 0.75; muscleRatio = 0.25; break;
+                        case "Moderado":   fatRatio = 0.80; muscleRatio = 0.20; break;
+                        case "Ativo":      fatRatio = 0.85; muscleRatio = 0.15; break;
+                        case "Muito Ativo":fatRatio = 0.90; muscleRatio = 0.10; break;
+                        default:           fatRatio = 0.80; muscleRatio = 0.20;
+                    }
+                    const fatLoss = weightChange * fatRatio;
+                    const muscleLoss = weightChange * muscleRatio;
+                    fatMass = Math.max(fatMass - fatLoss, 0);
+                    leanMass = Math.max(leanMass - muscleLoss, 0);
+                } else { // Superávit
+                    const totalGain = -weightChange;
+                    if (hipertrofia) {
+                        switch (exerciseLevel) {
+                            case "Muito Ativo": muscleRatio = 0.70; fatRatio = 0.30; break;
+                            case "Ativo":       muscleRatio = 0.65; fatRatio = 0.35; break;
+                            case "Moderado":    muscleRatio = 0.60; fatRatio = 0.40; break;
+                            case "Leve":        muscleRatio = 0.50; fatRatio = 0.50; break;
+                            case "Sedentário":  muscleRatio = 0.40; fatRatio = 0.60; break;
+                            default:            muscleRatio = 0.60; fatRatio = 0.40;
+                        }
+                    } else {
+                         switch (exerciseLevel) {
+                            case "Muito Ativo": muscleRatio = 0.60; fatRatio = 0.40; break;
+                            case "Ativo":       muscleRatio = 0.50; fatRatio = 0.50; break;
+                            case "Moderado":    muscleRatio = 0.40; fatRatio = 0.60; break;
+                            case "Leve":        muscleRatio = 0.30; fatRatio = 0.70; break;
+                            case "Sedentário":  muscleRatio = 0.20; fatRatio = 0.80; break;
+                            default:            muscleRatio = 0.40; fatRatio = 0.60;
+                        }
+                    }
+                    const muscleGain = totalGain * muscleRatio;
+                    const fatGain = totalGain * fatRatio;
+                    leanMass += muscleGain;
+                    fatMass += fatGain;
+                }
+
+                currentWeight = leanMass + fatMass;
+                weightHistory.push(currentWeight);
+                leanMassHistory.push(leanMass);
+                fatMassHistory.push(fatMass);
+            }
+
+            return {
+                daysArray: daysArray,
+                weightHistory: weightHistory,
+                leanMassHistory: leanMassHistory,
+                fatMassHistory: fatMassHistory,
+                dailyCalorieIntake: dailyCalorieIntake,
+                error: null
+            };
+        }
+
+
+        /**
+         * Calcula as recomendações de macronutrientes.
+         * @param {number} totalCalories Ingestão diária total de calorias.
+         * @param {boolean} hipertrofia Se a dieta é para hipertrofia.
+         * @returns {object} Objeto com gramas de carboidratos, proteína e gordura.
+         */
+        function calculateMacronutrients(totalCalories, hipertrofia) {
+            let calCarbs, calProteins, calFats;
+            if (hipertrofia) {
+                calProteins = totalCalories * 0.35;
+                calCarbs = totalCalories * 0.40;
+                calFats = totalCalories * 0.25;
+            } else {
+                calCarbs = totalCalories * 0.50;
+                calProteins = totalCalories * 0.25;
+                calFats = totalCalories * 0.25;
+            }
+            const carbsG = calCarbs / 4;
+            const proteinsG = calProteins / 4;
+            const fatsG = calFats / 9;
+            return { carbs: carbsG, proteins: proteinsG, fats: fatsG };
+        }
+
+
+        // =============================================================================
+        // Função de Plotagem do Gráfico
+        // =============================================================================
+        let evolutionChart = null;
+
+        function displayChart(days, weights, leanMass, fatMass, idealMin, idealMax) {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+
+            if (evolutionChart) {
+                evolutionChart.destroy();
+            }
+
+            evolutionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [
+                         // --- LINHAS DE PESO IDEAL (MÍNIMO E MÁXIMO) ---
+                        {
+                            label: 'Peso Ideal Mínimo', // Novo Rótulo
+                            data: Array(days.length).fill(null).map((_, i) => ({ x: days[i], y: idealMin })),
+                            borderColor: 'rgb(0, 0, 0)', // Preto
+                            borderDash: [5, 5], // Tracejado
+                            pointRadius: 0, // Sem pontos
+                            borderWidth: 1.5, // Espessura da linha
+                            fill: false, // Sem preenchimento
+                            order: 4 // Desenha atrás
+                        },
+                         {
+                            label: 'Peso Ideal Máximo', // Novo Rótulo
+                            data: Array(days.length).fill(null).map((_, i) => ({ x: days[i], y: idealMax })),
+                            borderColor: 'rgb(0, 0, 0)', // Preto
+                            borderDash: [5, 5], // Tracejado
+                            pointRadius: 0, // Sem pontos
+                            borderWidth: 1.5, // Espessura da linha
+                            fill: false, // Sem preenchimento
+                            hidden: false, // Torna visível
+                            order: 5 // Desenha atrás
+                        },
+                        // --- LINHAS DE DADOS PRINCIPAIS ---
+                        {
+                            label: 'Peso Total',
+                            data: weights,
+                            borderColor: 'rgb(31, 119, 180)', // Azul
+                            backgroundColor: 'rgba(31, 119, 180, 0.1)',
+                            tension: 0.1,
+                            borderWidth: 2,
+                            order: 1 // Desenha na frente
+                        },
+                        {
+                            label: 'Massa Magra',
+                            data: leanMass,
+                            borderColor: 'rgb(44, 160, 44)', // Verde
+                             backgroundColor: 'rgba(44, 160, 44, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            borderWidth: 1.5,
+                            order: 2
+                        },
+                        {
+                            label: 'Massa Gorda',
+                            data: fatMass,
+                            borderColor: 'rgb(214, 39, 40)', // Vermelho
+                             backgroundColor: 'rgba(214, 39, 40, 0.1)',
+                            borderDash: [2, 2],
+                            tension: 0.1,
+                            borderWidth: 1.5,
+                            order: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Dias', font: { size: 14 } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            title: { display: true, text: 'Massa Corporal (kg)', font: { size: 14 } },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' },
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolução Corporal Projetada',
+                            font: { size: 18 },
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        legend: {
+                             position: 'bottom',
+                             labels: {
+                                usePointStyle: true,
+                                // Remove o filtro, pois agora queremos mostrar ambas as linhas ideais
+                             }
+                        },
+                         tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return `Dia ${tooltipItems[0].label}`;
+                                },
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(1) + ' kg';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                }
+            });
+        }
+
+
+        // =============================================================================
+        // Event Listeners e Atualizações da UI
+        // =============================================================================
+        const ageInput = document.getElementById('age');
+        const weightInput = document.getElementById('weight');
+        const heightInput = document.getElementById('height');
+        const bodyFatInput = document.getElementById('body_fat');
+        const sexInput = document.getElementById('sex');
+        const exerciseLevelInput = document.getElementById('exercise_level');
+        const goalDaysInput = document.getElementById('goal_days');
+        const hipertrofiaInput = document.getElementById('hipertrofia');
+        const sleepQualityInput = document.getElementById('sleep_quality');
+        const stressLevelInput = document.getElementById('stress_level');
+        const sleepQualityRange = document.getElementById('sleep_quality_range');
+        const stressLevelRange = document.getElementById('stress_level_range');
+
+        const simulateBtn = document.getElementById('simulateBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const initialInfo = document.getElementById('initialInfo');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        const bodyTypeResult = document.getElementById('bodyTypeResult');
+        const idealWeightResult = document.getElementById('idealWeightResult');
+        const idealFatResult = document.getElementById('idealFatResult');
+
+        const caloriesResult = document.getElementById('caloriesResult');
+        const carbsResult = document.getElementById('carbsResult');
+        const proteinsResult = document.getElementById('proteinsResult');
+        const fatsResult = document.getElementById('fatsResult');
+        const chatGptLink = document.getElementById('chatGptLink');
+        const alertArea = document.getElementById('alertArea');
+        const analysisArea = document.getElementById('analysisArea');
+
+        function updateInitialInfo() {
+             const age = parseFloat(ageInput.value);
+             const weight = parseFloat(weightInput.value);
+             const height = parseFloat(heightInput.value);
+             const bodyFat = parseFloat(bodyFatInput.value);
+             const sex = sexInput.value;
+
+             if (!isNaN(age) && !isNaN(weight) && !isNaN(height) && !isNaN(bodyFat)) {
+                 bodyTypeResult.textContent = classifyBodyType(weight, height, bodyFat, sex);
+                 const [minW, maxW] = calculateIdealRange(age, height, sex);
+                 idealWeightResult.textContent = `${minW} - ${maxW}`;
+                 const [minF, maxF] = calculateBodyFatRange(age, sex);
+                 idealFatResult.textContent = `${minF.toFixed(1)} - ${maxF.toFixed(1)}`;
+             } else {
+                 bodyTypeResult.textContent = '-';
+                 idealWeightResult.textContent = '-';
+                 idealFatResult.textContent = '-';
+             }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateInitialInfo);
+        [ageInput, weightInput, heightInput, bodyFatInput, sexInput].forEach(input => {
+            input.addEventListener('input', updateInitialInfo);
+        });
+
+         sleepQualityRange.addEventListener('input', () => sleepQualityInput.value = sleepQualityRange.value);
+         stressLevelRange.addEventListener('input', () => stressLevelInput.value = stressLevelRange.value);
+         sleepQualityInput.addEventListener('input', () => sleepQualityRange.value = sleepQualityInput.value);
+         stressLevelInput.addEventListener('input', () => stressLevelRange.value = stressLevelInput.value);
+
+        simulateBtn.addEventListener('click', () => {
+            const age = parseFloat(ageInput.value);
+            const weight = parseFloat(weightInput.value);
+            const height = parseFloat(heightInput.value);
+            const bodyFat = parseFloat(bodyFatInput.value);
+            const sex = sexInput.value;
+            const exerciseLevel = exerciseLevelInput.value;
+            const goalDays = parseInt(goalDaysInput.value);
+            const hipertrofia = hipertrofiaInput.checked;
+            const sleepQuality = parseInt(sleepQualityInput.value);
+            const stressLevel = parseInt(stressLevelInput.value);
+
+             if (isNaN(age) || isNaN(weight) || isNaN(height) || isNaN(bodyFat) || isNaN(goalDays) || isNaN(sleepQuality) || isNaN(stressLevel)) {
+                 errorMessageDiv.textContent = "Por favor, preencha todos os campos numéricos corretamente.";
+                 errorMessageDiv.classList.remove('hidden');
+                 resultsArea.classList.add('hidden');
+                 return;
+             }
+             errorMessageDiv.classList.add('hidden');
+
+            const [idealMin, idealMax] = calculateIdealRange(age, height, sex);
+            const idealWeightMid = (parseFloat(idealMin) + parseFloat(idealMax)) / 2;
+
+            const simulationResult = simulateEvolution(
+                weight, idealWeightMid, goalDays, age, height, sex, bodyFat, exerciseLevel, hipertrofia, sleepQuality, stressLevel
+            );
+
+             if (simulationResult.error) {
+                 errorMessageDiv.textContent = simulationResult.error;
+                 errorMessageDiv.classList.remove('hidden');
+                 resultsArea.classList.add('hidden');
+                 if (evolutionChart) evolutionChart.destroy();
+                 return;
+             } else {
+                 errorMessageDiv.classList.add('hidden');
+                 resultsArea.classList.remove('hidden');
+             }
+
+            const { daysArray, weightHistory, leanMassHistory, fatMassHistory, dailyCalorieIntake } = simulationResult;
+
+            displayChart(daysArray, weightHistory, leanMassHistory, fatMassHistory, parseFloat(idealMin), parseFloat(idealMax));
+
+            const macros = calculateMacronutrients(dailyCalorieIntake, hipertrofia);
+            caloriesResult.textContent = `${dailyCalorieIntake.toFixed(0)} kcal`;
+            carbsResult.textContent = `${macros.carbs.toFixed(0)} g`;
+            proteinsResult.textContent = `${macros.proteins.toFixed(0)} g`;
+            fatsResult.textContent = `${macros.fats.toFixed(0)} g`;
+
+            const prompt = `Me dê um cardápio diário detalhado (café da manhã, almoço, jantar, lanches) com aproximadamente ${macros.carbs.toFixed(0)}g de carboidratos, ${macros.proteins.toFixed(0)}g de proteína e ${macros.fats.toFixed(0)}g de gordura, totalizando cerca de ${dailyCalorieIntake.toFixed(0)} kcal. Considere opções saudáveis e variadas.`;
+            const chatgptUrl = `https://chat.openai.com/?prompt=${encodeURIComponent(prompt)}`;
+            chatGptLink.href = chatgptUrl;
+
+            alertArea.innerHTML = '';
+            const finalWeight = weightHistory[weightHistory.length - 1];
+            if (finalWeight < idealMin) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning';
+                alertDiv.textContent = `Atenção: O peso final projetado (${finalWeight.toFixed(1)} kg) está abaixo da faixa ideal (${idealMin} - ${idealMax} kg). Considere ajustar a meta ou o prazo para um déficit calórico menos agressivo.`;
+                alertArea.appendChild(alertDiv);
+            } else if (finalWeight > idealMax) {
+                 const alertDiv = document.createElement('div');
+                 alertDiv.className = 'alert alert-warning';
+                 alertDiv.textContent = `Atenção: O peso final projetado (${finalWeight.toFixed(1)} kg) está acima da faixa ideal (${idealMin} - ${idealMax} kg). Se o objetivo não for hipertrofia, considere ajustar a meta ou o prazo para um superávit calórico menor.`;
+                 alertArea.appendChild(alertDiv);
+            } else {
+                 const alertDiv = document.createElement('div');
+                 alertDiv.className = 'alert alert-success';
+                 alertDiv.textContent = `Sucesso: A trajetória projetada termina dentro da zona alvo recomendada (${idealMin} - ${idealMax} kg)!`;
+                 alertArea.appendChild(alertDiv);
+            }
+
+             let analysisText = "";
+             if (sleepQuality <= 6 && stressLevel >= 7) {
+                 analysisText = "Seu sono está prejudicado e seu nível de estresse está alto. Isso pode estar impactando negativamente seus resultados. Considere técnicas de relaxamento e higiene do sono.";
+                 analysisArea.className = 'alert alert-warning';
+             } else if (sleepQuality <= 6) {
+                 analysisText = "Seu sono pode estar impactando seus resultados. Melhore sua higiene do sono para otimizar a recuperação e o progresso.";
+                  analysisArea.className = 'alert alert-info';
+             } else if (stressLevel >= 7) {
+                 analysisText = "Seu nível de estresse está alto, o que pode estar afetando seus resultados. Considere técnicas de gerenciamento de estresse, como meditação ou exercícios leves.";
+                  analysisArea.className = 'alert alert-info';
+             } else {
+                 analysisText = "Seus níveis de sono e estresse parecem estar bons, o que favorece seus resultados. Continue assim!";
+                 analysisArea.className = 'alert alert-success';
+             }
+             analysisArea.textContent = analysisText;
+
+        });
+
+    </script>
+</body>
+</html>
