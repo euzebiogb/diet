@@ -4,4 +4,4 @@ Use este Simulador Gratuito para projetar sua jornada! Insira seus dados e veja 
 
 Receba ainda sugestões de calorias e macros! 🍎
 
- euzebiogb.github.io/diet
+No seu navegador digite: euzebiogb.github.io/diet
